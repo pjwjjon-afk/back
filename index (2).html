@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>교육과정 되돌아보기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 차분한 학교 문서, 함께 쓰는 학년 협의록
+   IDEA: 한글로 만든 학교 평가 양식 표 그대로 — 분홍 머리칸, 검은 테두리
+   PICTURE: 양식 표 자체가 화면의 중심, 칸마다 바로 입력
+   COLOUR and TYPE: 흰 종이, 먹색 글씨, 양식의 분홍 머리칸, 남색 강조 / Gowun Dodum + Noto Sans KR
+   LAYOUT: 위에 학년·반·이름, 탭 두 개(내 의견 쓰기 / 학년 모아보기), 좁은 화면에선 칸이 세로로 쌓임 */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#15171a);--paper:light-dark(#fff,#1d2024);--ink:light-dark(#1b1b1b,#e8e6e3);--mute:light-dark(#62656a,#a2a5aa);--line:light-dark(#2a2a2a,#5b5f66);--soft:light-dark(#d9d9d9,#383c42);--head:light-dark(#f8d9de,#4a2a31);--side:light-dark(#fbe7ea,#3a2328);--acc:light-dark(#21407a,#9db8ee);--ok:light-dark(#2b6b3f,#8fd3a6)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Noto Sans KR",system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:1180px;margin:0 auto;padding:clamp(18px,3vw,40px) max(4vw,14px) 60px}
+h1{font:400 clamp(28px,4vw,40px)/1.1 "Gowun Dodum",sans-serif;margin:0 0 6px;text-wrap:balance}
+.sub{color:var(--mute);margin:0 0 18px;font-size:15px}
+.who{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:end;padding:14px 16px;border:1.5px solid var(--line);background:var(--side);margin-bottom:14px}
+.who label{display:flex;flex-direction:column;font-size:13px;color:var(--mute);gap:4px}
+.who input,.who select{font:16px "Noto Sans KR",sans-serif;padding:9px 10px;border:1px solid var(--line);background:var(--paper);color:var(--ink);min-height:44px;border-radius:4px}
+.who input[type=number]{width:84px}.who select{width:96px}.who #name{width:160px}
+#status{margin-left:auto;font-size:14px;color:var(--mute);align-self:center}
+#status.ok{color:var(--ok)}
+.note{font-size:14px;padding:10px 14px;border:1px dashed var(--line);margin:0 0 14px;display:none}
+.tabs{display:flex;gap:6px;margin:6px 0 16px;flex-wrap:wrap}
+.tabs button,.btn{font:500 15px "Noto Sans KR",sans-serif;min-height:44px;padding:0 18px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer;border-radius:4px}
+.tabs button[aria-selected=true]{background:var(--acc);border-color:var(--acc);color:var(--paper)}
+button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+h2{font:400 21px/1.3 "Gowun Dodum",sans-serif;margin:26px 0 8px}
+table.f{width:100%;border-collapse:collapse;border:2px solid var(--line);table-layout:fixed;background:var(--paper)}
+.f th,.f td{border:1px solid var(--line);vertical-align:top;padding:0}
+.f thead th,.f .ch{background:var(--head);font-weight:500;font-size:14px;padding:8px 6px;text-align:center;vertical-align:middle}
+.f .rh{background:var(--side);font-weight:500;font-size:14px;text-align:center;vertical-align:middle;padding:8px 4px;width:112px;border-right:3px double var(--line)}
+.f .rh small{display:block;font-weight:400;color:var(--mute);font-size:12px}
+textarea{display:block;width:100%;min-height:120px;border:0;resize:vertical;padding:10px;font:16px/1.6 "Noto Sans KR",sans-serif;background:transparent;color:var(--ink)}
+.f td.full textarea{min-height:110px}
+.cell{padding:8px 10px;font-size:14px;min-height:60px}
+.cell ul{margin:0;padding:0;list-style:none}
+.cell li{padding:5px 0;border-bottom:1px dotted var(--soft);white-space:pre-wrap}
+.cell li:last-child{border:0}
+.cell b{font-weight:700;color:var(--acc);margin-right:6px;white-space:nowrap}
+.cell .empty{color:var(--mute)}
+.cp{float:right;font-size:12px;border:1px solid var(--soft);background:var(--paper);color:var(--mute);border-radius:3px;padding:2px 8px;cursor:pointer;min-height:28px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:13px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--paper)}
+.chip.on{background:var(--side)}
+.hint{font-size:13px;color:var(--mute);margin:8px 0 0}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:6px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none}
+#toast.show{opacity:1}
+@media(prefers-reduced-motion:reduce){#toast{transition:none}}
+@media(max-width:700px){
+ .f,.f tbody,.f tr,.f td,.f th{display:block;width:100%}
+ .f thead{display:none}.f tr.hr{display:none}
+ .f .rh{width:100%;border-right:1px solid var(--line);border-bottom:2px solid var(--line);text-align:left;padding:10px}
+ .f .rh small{display:inline;margin-left:6px}
+ .f td[data-l]::before{content:attr(data-l);display:block;background:var(--head);font-size:13px;font-weight:500;padding:6px 10px}
+ #status{margin-left:0;width:100%}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>교육과정 되돌아보기</h1>
+  <p class="sub">2026학년도 학교 양식 그대로, 동학년 선생님들이 각자 쓰고 함께 모아 봅니다.</p>
+
+  <div class="who">
+    <label>학년<input id="grade" type="number" min="1" max="6" value="4"></label>
+    <label>반<select id="cls"></select></label>
+    <label>이름<input id="name" type="text" placeholder="예: 박종우" autocomplete="name"></label>
+    <span id="status">연결 중…</span>
+  </div>
+  <p class="note" id="note"></p>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="t-write" aria-selected="true">내 의견 쓰기</button>
+    <button role="tab" id="t-all" aria-selected="false">학년 모아보기</button>
+    <button role="tab" id="t-ref" aria-selected="false">참고 자료</button>
+  </div>
+
+  <section id="v-write"></section>
+  <section id="v-ref" hidden>
+    <div class="bar"><button class="btn" id="copyRef">참고 자료 전체 복사</button></div>
+    <p class="hint">작년 4학년 「학년별 교육활동 되돌아보기 자료」예요. 칸마다 [복사]를 누르거나 글자를 드래그해서 복사할 수 있어요.</p>
+    <div id="refBody"></div>
+  </section>
+  <section id="v-all" hidden>
+    <div class="bar">
+      <button class="btn" id="copyAll">학년 전체 내용 복사</button><button class="btn" id="reload">새로고침</button>
+      <div class="chips" id="chips"></div>
+    </div>
+    <p class="hint">칸마다 [복사]를 누르면 그 칸의 의견이 줄별로 복사돼요. 한글 양식에 그대로 붙여 넣으세요.</p>
+    <div id="allBody"></div>
+  </section>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+{
+const SECTIONS=[
+ {title:'가. 교육과정운영면',cols:['잘된 점','개선할 점 또는 문제점','해결 방안 제시'],colHead:true,rows:[
+  {label:'교과교육 활동',keys:['sub_good','sub_bad','sub_fix']},
+  {label:'창의적 체험활동',small:'(체험중심 교육활동 등)',keys:['cre_good','cre_bad','cre_fix']}]},
+ {title:'나. 기타 학교 활동에 관한 전반적인 운영',rows:[
+  {label:'교직원 회의 운영면',cols:['좋은 점','문제점','회의 방식, 내용 등의 운영에 관한 개선 의견'],keys:['meet_good','meet_bad','meet_fix']},
+  {label:'각종 행사 활동면',cols:['계속 하면 좋을 것 같은 행사','굳이 안 해도 되었던 행사','행사활동에 관한 개선의견'],keys:['ev_keep','ev_drop','ev_fix']},
+  {label:'업무 경감 부분',cols:['1년 동안 도움 받은 부분','스스로 해결했어야 하는 업무처리(내용 또는 업무량)','개선되어야 할 부분(구체적으로)'],keys:['work_help','work_self','work_fix']},
+  {label:'학습 기자재 및 교육활동 시 필요 물품',cols:['반드시 필요한 기자재(물품)','있으면 좋으나 당장 필요하지는 않는 장기적 필요 기자재(물품)'],keys:['eq_must','eq_later']},
+  {label:'기타 학교 운영에 관한 전반적인 의견',cols:[''],keys:['etc']}]}
+];
+const ALLKEYS=SECTIONS.flatMap(s=>s.rows.flatMap(r=>r.keys));
+const LABEL={};SECTIONS.forEach(s=>s.rows.forEach(r=>r.keys.forEach((k,i)=>LABEL[k]=[r.label,(r.cols||s.cols)[i]])));
+const $=id=>document.getElementById(id);
+const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+$('cls').innerHTML=Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}반</option>`).join('');
+
+const API='https://script.google.com/macros/s/AKfycbz26GAwqNRF4qNR4aUYgYzC2JuwobyZk3TGIZzNFyA_INMN09UZ1zWi423qXWeYFakP/exec';  // ← 구글 Apps Script 웹 앱 URL을 여기에 넣어요
+let mine={grade:4,cls:1,name:'',f:{}},others=[],loaded=false;
+const keyOf=(g,c)=>'g'+g+'c'+c;
+
+/* ---------- 쓰기 화면 ---------- */
+function writeTable(s){
+  const n=Math.max(...s.rows.map(r=>r.keys.length));
+  let h=`<h2>${s.title}</h2><table class="f"><colgroup><col style="width:112px">${'<col>'.repeat(n)}</colgroup>`;
+  if(s.colHead) h+=`<thead><tr><th class="ch">영역</th>${s.cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>`;
+  h+='<tbody>';
+  s.rows.forEach(r=>{
+    const cols=r.cols||s.cols,span=r.keys.length===1?n:(r.keys.length<n?null:1);
+    const rs=r.cols&&r.cols[0]?2:1;
+    if(r.cols&&r.cols[0]) h+=`<tr class="hr"><th class="rh" rowspan="2">${r.label}</th>${cols.map((c,i)=>`<th class="ch" ${r.keys.length<n&&i===0?`colspan="${n-r.keys.length+1}"`:''}>${c}</th>`).join('')}</tr><tr>`;
+    else h+=`<tr><th class="rh">${r.label}${r.small?`<small>${r.small}</small>`:''}</th>`;
+    r.keys.forEach((k,i)=>{
+      const cs=r.keys.length===1?n:(r.keys.length<n&&i===0?n-r.keys.length+1:1);
+      h+=`<td ${cs>1?`colspan="${cs}"`:''} class="${r.keys.length===1?'full':''}" data-l="${esc(cols[i])}"><textarea id="f_${k}" data-k="${k}" aria-label="${esc(r.label+' '+cols[i])}"></textarea></td>`;
+    });
+    h+='</tr>';
+  });
+  return h+'</tbody></table>';
+}
+$('v-write').innerHTML=SECTIONS.map(writeTable).join('')+'<p class="hint">학년·반을 고르고 이름을 적으면 쓰는 대로 자동 저장돼요. 같은 반을 다시 고르면 저장된 내용을 불러와요. 다른 선생님들은 [학년 모아보기]에서 볼 수 있어요.</p>';
+
+function fillMine(){
+  $('grade').value=mine.grade||4;$('cls').value=mine.cls||1;$('name').value=mine.name||'';
+  ALLKEYS.forEach(k=>{const t=$('f_'+k);if(document.activeElement!==t)t.value=mine.f?.[k]||''});
+}
+
+/* ---------- 저장 ---------- */
+let timer=null,saving=false,again=false,lastSent='';
+function status(t,ok){const s=$('status');s.textContent=t;s.className=ok?'ok':''}
+function collect(){
+  const f={};ALLKEYS.forEach(k=>{const v=$('f_'+k).value;if(v.trim())f[k]=v});
+  return {grade:+$('grade').value||4,cls:+$('cls').value||1,name:$('name').value.trim(),f};
+}
+function draft(){try{localStorage.setItem('cr-draft-'+keyOf(mine.grade,mine.cls),JSON.stringify(mine))}catch(e){}}
+function schedule(){status('저장 대기…');clearTimeout(timer);timer=setTimeout(save,1200)}
+async function save(){
+  if(saving){again=true;return}
+  mine=collect();draft();
+  const body=JSON.stringify(mine);
+  if(!API){status('이 브라우저에만 저장',true);renderAll();return}
+  if(body===lastSent){status('저장됨',true);return}
+  if(!mine.name){status('이름을 적으면 저장돼요');return}
+  saving=true;status('저장 중…');
+  try{
+    const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
+    const j=await r.json();if(!j.ok)throw new Error(j.error||'저장 실패');
+    lastSent=body;
+    const i=others.findIndex(o=>o.key===keyOf(mine.grade,mine.cls));const me={...mine,key:keyOf(mine.grade,mine.cls)};
+    if(i>=0)others[i]=me;else others.push(me);
+    status('저장됨 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),true);renderAll();
+  }catch(e){status('저장 실패 — 인터넷 연결을 확인해 주세요 (내용은 이 브라우저에 남아 있어요)')}
+  saving=false;if(again){again=false;save()}
+}
+document.addEventListener('input',e=>{if(e.target.matches('textarea[data-k],#name'))schedule()});
+document.addEventListener('change',e=>{if(e.target.matches('#cls,#grade'))switchClass()});
+function switchClass(){
+  const g=+$('grade').value||4,c=+$('cls').value||1,k=keyOf(g,c);
+  const saved=others.find(o=>o.key===k);
+  let d=null;try{d=JSON.parse(localStorage.getItem('cr-draft-'+k)||'null')}catch(e){}
+  const wasSaved=others.some(o=>o.key===keyOf(mine.grade,mine.cls));
+  if(saved){mine={...saved,f:{...saved.f}};lastSent=JSON.stringify({grade:saved.grade,cls:saved.cls,name:saved.name,f:saved.f});fillMine();status(`${c}반 저장된 내용을 불러왔어요`,true);renderAll();return}
+  if(d){mine=d;fillMine()}else if(wasSaved){mine={grade:g,cls:c,name:'',f:{}};fillMine()}
+  mine.grade=g;mine.cls=c;try{localStorage.setItem('cr-me',k)}catch(e){}
+  schedule();
+}
+
+function note(t){const n=$('note');n.textContent=t;n.style.display=t?'block':'none'}
+
+/* ---------- 모아보기 ---------- */
+function people(){
+  const g=+$('grade').value||4;
+  const map=new Map();others.forEach(o=>map.set(o.key,o));
+  map.set(keyOf(mine.grade,mine.cls),mine);
+  return [...map.values()].filter(p=>+p.grade===g&&(p.name||Object.keys(p.f||{}).length)).sort((a,b)=>(a.cls||0)-(b.cls||0));
+}
+const who=p=>`${p.cls||'?'}반${p.name?' '+p.name:''}`;
+function cellText(ps,k){return ps.filter(p=>p.f?.[k]?.trim()).map(p=>`- ${p.f[k].trim()} (${who(p)})`).join('\n')}
+function renderAll(){
+  const ps=people(),n=3;
+  $('chips').innerHTML=ps.length?ps.map(p=>`<span class="chip ${Object.keys(p.f||{}).length?'on':''}">${esc(who(p))} · ${Object.keys(p.f||{}).length}칸</span>`).join(''):'<span class="hint">아직 작성한 선생님이 없어요.</span>';
+  $('allBody').innerHTML=SECTIONS.map(s=>{
+    let h=`<h2>${s.title} <span style="font-size:15px;color:var(--mute)">(${+$('grade').value||4}학년)</span></h2><table class="f"><colgroup><col style="width:112px">${'<col>'.repeat(n)}</colgroup>`;
+    if(s.colHead) h+=`<thead><tr><th class="ch">영역</th>${s.cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>`;
+    h+='<tbody>';
+    s.rows.forEach(r=>{
+      const cols=r.cols||s.cols;
+      if(r.cols&&r.cols[0]) h+=`<tr class="hr"><th class="rh" rowspan="2">${r.label}</th>${cols.map((c,i)=>`<th class="ch" ${r.keys.length<n&&i===0?`colspan="${n-r.keys.length+1}"`:''}>${c}</th>`).join('')}</tr><tr>`;
+      else h+=`<tr><th class="rh">${r.label}${r.small?`<small>${r.small}</small>`:''}</th>`;
+      r.keys.forEach((k,i)=>{
+        const cs=r.keys.length===1?n:(r.keys.length<n&&i===0?n-r.keys.length+1:1);
+        const items=ps.filter(p=>p.f?.[k]?.trim());
+        h+=`<td ${cs>1?`colspan="${cs}"`:''} data-l="${esc(cols[i])}"><div class="cell">${items.length?`<button class="cp" data-cp="${k}">복사</button><ul>${items.map(p=>`<li><b>${esc(who(p))}</b>${esc(p.f[k].trim())}</li>`).join('')}</ul>`:'<span class="empty">아직 없음</span>'}</div></td>`;
+      });
+      h+='</tr>';
+    });
+    return h+'</tbody></table>';
+  }).join('');
+}
+async function copy(t){
+  try{await navigator.clipboard.writeText(t);toast('복사했어요')}catch(e){toast('복사가 막혔어요 — 직접 드래그해서 복사해 주세요')}
+}
+let tt;function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('show'),1800)}
+$('allBody').addEventListener('click',e=>{const k=e.target.dataset?.cp;if(k)copy(cellText(people(),k).replace(/^- /gm,'- '))});
+$('reload').addEventListener('click',()=>load(false).then(()=>toast('최신 내용으로 바꿨어요')));
+$('copyAll').addEventListener('click',()=>{
+  const ps=people();
+  const out=SECTIONS.map(s=>s.title+'\n'+s.rows.map(r=>r.keys.map(k=>{const t=cellText(ps,k);return t?`[${r.label} · ${LABEL[k][1]||'의견'}]\n${t}`:''}).filter(Boolean).join('\n\n')).filter(Boolean).join('\n\n')).join('\n\n');
+  copy(`${+$('grade').value||4}학년 교육과정 되돌아보기\n\n`+out);
+});
+
+/* ---------- 참고 자료 ---------- */
+const REF=[
+ {title:'가. 교육과정운영면 (4학년)',cols:['잘된 점','개선할 점 또는 문제점','개선 필요 또는 문제가 되는 원인 및 해결 방법 제시'],colHead:true,rows:[
+  {label:'교과교육 활동',cells:[
+   '▶인구교육 연구학교 프로젝트가 교과와 연계가 잘 되었고, 4학년 학생들의 발달 수준에 적합하게 설계되어 수업 참여도가 높았다.\n▶2025 교육과정 적용의 첫해로 중복이나 결손 학습 내용이 많았는데, 시수 확보를 위해 학습량을 조절하여 교육과정을 효과적으로 운영했다.\n▶동학년 교사 간 수업자료 공유 등이 활발해져서 다채로운 수업 운영이 가능했다.',
+   '▶1인 1악기 발표회에서 학급별로 서로 다른 곡을 준비해 공연함으로써, 학생들이 다양한 음악을 감상하며 서로의 연주를 즐길 수 있었다. 다만 당시 체육관에서 마이크 주파수 충돌이 여러 차례 발생하여서, 인근 승평중학교와 협력하여 주파수 간섭이 일어나지 않도록 사전에 조치할 필요가 있다.',
+   '▶차기년도 학교자율시간 워크북과 공개수업용 프로젝트 구성을 잘하여서, 담임선생님들의 부담을 최소화하면 좋겠다.\n▶2026학년도에는 4학년 교육과정에서 중복, 결손 내용이 사라지다 보니, 관련 내용을 삭제시키고 교육과정을 편성, 운영하면 될 것 같다.']},
+  {label:'창의적 체험활동',small:'(체험중심 교육활동 등)',cells:[
+   '▶가을 현장체험학습에서 학생들이 선호하는 직업과 관련된 다양한 체험을 할 수 있어서 만족도가 높았다.',
+   '▶직업체험을 할 수 있는 시간이 약 3시간 정도뿐인데, 인기 있는 체험 부스에 대기 시간이 길어지다 보니 체험을 충분히 하지 못하는 학생들도 생겼다.',
+   '▶체험학습 전 단체권으로 이용할 수 있는 부스 20가지를 1~20번까지 우선순위를 선택하도록 하여 미리 계획해 보게 한다.']}]},
+ {title:'나. 기타 학교 활동에 관한 전반적인 운영에 관한 되돌아보기',rows:[
+  {label:'각종 행사 활동면',cols:['앞으로도 계속 하면 좋을 것 같은 행사','굳이 안 해도 되었던 행사','행사활동에 관한 개선의견'],cells:['- 버스킹, 보행데이\n- 합동소방훈련\n- 작가와의 만남\n- 1인 1악기 발표회','-','-']},
+  {label:'업무 경감 부분',cols:['1년 동안 도움받은 부분','스스로 해결했어야 하는 업무처리(내용 또는 업무량)','개선되어야 할 부분(구체적으로)'],cells:['연수등록부를 온라인으로 받아 교직원 협의회때 빠른 시작이 가능했다.','-','수합 업무(교외체험학습, 학습준비물 등)는 엑셀 파일이 아닌 구글 스프레드시트를 기본적으로 활용하면 좋을 것 같다. 새학기 준비기간에 연수 진행.']},
+  {label:'학년별 의견 수렴',cols:['학년별 시정 운영','27학년도 학교자율시간 활동 주제(3,5학년)','26학년도 학사일정 1월 학사 / 2월 학사 재량휴업일'],cells:['5-3-4학년 급식 시간이 겹치다 보니, 1~2학급만 이동이 늦어도 전체 급식 시간이 밀리는 상황이 생겼다. 3~5학년 모두 정해진 시간에 신속하게 이동할 필요가 있다.','-','1월 학사를 선호하는 비율이 높았다.']},
+  {label:'학습 기자재 및 교육활동 시 필요 물품',cols:['반드시 필요한 기자재(물품)','있으면 좋으나 당장 필요하지는 않는 장기적 필요 기자재(물품)'],cells:['2026 교단환경개선비를 활용하여 카메라(캠)가 없는 교실에 우선 지원해주면 좋을 것 같다.','']},
+  {label:'기타 학교 운영에 관한 전반적인 의견',cols:[''],cells:['올 2학기에 전자칠판이 없는 교실에 신속히 설치해 주시고, 여름철 에어컨이 원활하지 않을 때 행정실에서 선풍기를 대여해 주시는 등 교장, 교감 선생님과 행정실의 발 빠른 지원 덕분에 2학기 교육활동을 안정적으로 운영할 수 있었습니다.']}]}
+];
+const REFTXT=[];
+function renderRef(){
+  const n=3;REFTXT.length=0;
+  $('refBody').innerHTML=REF.map(s=>{
+    let h=`<h2>${s.title}</h2><table class="f"><colgroup><col style="width:112px">${'<col>'.repeat(n)}</colgroup>`;
+    if(s.colHead) h+=`<thead><tr><th class="ch">영역</th>${s.cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>`;
+    h+='<tbody>';
+    s.rows.forEach(r=>{
+      const cols=r.cols||s.cols,k=r.cells.length;
+      if(r.cols&&r.cols[0]) h+=`<tr class="hr"><th class="rh" rowspan="2">${r.label}</th>${cols.map((c,i)=>`<th class="ch" ${k<n&&i===0?`colspan="${n-k+1}"`:''}>${c}</th>`).join('')}</tr><tr>`;
+      else h+=`<tr><th class="rh">${r.label}${r.small?`<small>${r.small}</small>`:''}</th>`;
+      r.cells.forEach((t,i)=>{
+        const cs=k===1?n:(k<n&&i===0?n-k+1:1),id=REFTXT.push(t)-1,has=t&&t!=='-';
+        h+=`<td ${cs>1?`colspan="${cs}"`:''} data-l="${esc(cols[i])}"><div class="cell" style="white-space:pre-wrap;user-select:text">${has?`<button class="cp" data-ref="${id}">복사</button>`:''}${esc(t)||'<span class="empty">(비어 있음)</span>'}</div></td>`;
+      });
+      h+='</tr>';
+    });
+    return h+'</tbody></table>';
+  }).join('');
+}
+renderRef();
+$('refBody').addEventListener('click',e=>{const i=e.target.dataset?.ref;if(i!=null)copy(REFTXT[+i])});
+$('copyRef').addEventListener('click',()=>copy(REF.map(s=>s.title+'\n'+s.rows.map(r=>r.cells.map((t,i)=>t&&t!=='-'?`[${r.label}${(r.cols||s.cols)[i]?' · '+(r.cols||s.cols)[i]:''}]\n${t}`:'').filter(Boolean).join('\n\n')).join('\n\n')).join('\n\n')));
+
+/* ---------- 탭 ---------- */
+const VIEWS=['write','all','ref'];
+function tab(w){
+  VIEWS.forEach(v=>{$('t-'+v).setAttribute('aria-selected',v===w);$('v-'+v).hidden=v!==w});
+  if(w==='all')renderAll();
+  try{if(location.hash!=='#'+w)history.replaceState(null,'','#'+w)}catch(e){}
+}
+VIEWS.forEach(v=>$('t-'+v).onclick=()=>tab(v));
+const fromHash=()=>VIEWS.includes(location.hash.slice(1))?location.hash.slice(1):'write';
+tab(fromHash());
+window.addEventListener('hashchange',()=>tab(fromHash()));
+
+/* ---------- 연결 ---------- */
+async function load(first){
+  if(!API)return;
+  try{
+    const r=await fetch(API+'?t='+Date.now());const j=await r.json();
+    if(!j.ok)throw 0;
+    others=j.entries.map(e=>({...e,grade:+e.grade,cls:+e.cls,f:e.f||{}}));loaded=true;
+    if(first){
+      const k=(()=>{try{return localStorage.getItem('cr-me')}catch(e){return null}})();
+      if(k){const m=k.match(/^g(\d+)c(\d+)$/);if(m){$('grade').value=m[1];$('cls').value=m[2]}}
+      const cur=keyOf(+$('grade').value||4,+$('cls').value||1);const saved=others.find(o=>o.key===cur);
+      if(saved){mine={...saved,f:{...saved.f}};lastSent=JSON.stringify({grade:saved.grade,cls:saved.cls,name:saved.name,f:saved.f})}
+      else{try{const d=JSON.parse(localStorage.getItem('cr-draft-'+cur)||'null');if(d)mine=d}catch(e){}}
+      fillMine();status('연결됨',true);
+    }
+    renderAll();note('');
+  }catch(e){if(first){status('연결 안 됨');note('저장소(구글 시트)에 연결하지 못했어요. 지금 쓰는 내용은 이 브라우저에만 남아요. 잠시 뒤 새로고침해 주세요.')}}
+}
+$('t-all').addEventListener('click',()=>load(false));
+setInterval(()=>{if(!$('v-all').hidden&&!document.hidden)load(false)},60000);
+if(!API){note('아직 저장소(구글 시트)가 연결되지 않았어요. 지금은 이 브라우저에만 저장돼요.');status('이 브라우저에만 저장');
+  try{const k=localStorage.getItem('cr-me')||keyOf(4,1);const d=JSON.parse(localStorage.getItem('cr-draft-'+k)||'null');if(d)mine=d}catch(e){}
+  fillMine();renderAll()}
+else{status('불러오는 중…');load(true)}
+}
+</script>
+</body>
+</html>
