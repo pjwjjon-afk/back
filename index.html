@@ -279,7 +279,7 @@ const VIEWS=['write','all','ref'];
 function tab(w){
   VIEWS.forEach(v=>{$('t-'+v).setAttribute('aria-selected',v===w);$('v-'+v).hidden=v!==w});
   if(w==='all')renderAll();
-  if(location.hash!=='#'+w)history.replaceState(null,'','#'+w);
+  try{if(location.hash!=='#'+w)history.replaceState(null,'','#'+w)}catch(e){}
 }
 VIEWS.forEach(v=>$('t-'+v).onclick=()=>tab(v));
 const fromHash=()=>VIEWS.includes(location.hash.slice(1))?location.hash.slice(1):'write';
